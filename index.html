@@ -150,7 +150,6 @@
             gap: 15px;
         }
 
-        /* TEXT ONLY BADGES (No Background) */
         .stat-badge {
             font-size: 0.9rem;
             font-weight: bold;
@@ -225,15 +224,15 @@
                 <div class="inputs-grid">
                     <div class="input-group">
                         <label>Current CGPA</label>
-                        <input type="number" id="currCGPA" step="0.01" value="9.08">
+                        <input type="number" id="currCGPA" step="0.01" value="0.0" oninput="saveInputs()">
                     </div>
                     <div class="input-group">
                         <label>Completed Credits</label>
-                        <input type="number" id="currCredits" step="0.5" value="40">
+                        <input type="number" id="currCredits" step="0.5" value="40" oninput="saveInputs()">
                     </div>
                     <div class="input-group">
                         <label>Target CGPA</label>
-                        <input type="number" id="targetCGPA" step="0.01" value="9.0">
+                        <input type="number" id="targetCGPA" step="0.01" value="8.5" oninput="saveInputs()">
                     </div>
                 </div>
             </div>
@@ -280,7 +279,7 @@
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // ===============================================================
-        // PASTE YOUR FIREBASE CONFIG HERE
+        // FIREBASE CONFIG
         // ===============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyCh3Wi_RRz71TjF0N6VS8b8pfxY63GSOyo",
@@ -293,7 +292,6 @@
         };
         // ===============================================================
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -301,7 +299,6 @@
 
         let currentUser = null;
 
-        // Make functions globally available for HTML buttons
         window.login = async function() {
             try {
                 await signInWithPopup(auth, provider);
@@ -321,7 +318,6 @@
             const target = document.getElementById('targetCGPA').value;
             const pointsNeeded = document.getElementById('points-needed').innerText;
             
-            // Collect User's Predictions
             const predictions = COURSES.map(c => {
                 return { 
                     subject: c.name, 
@@ -346,7 +342,6 @@
             }
         }
 
-        // Monitor Auth State
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             updateAuthUI(user);
@@ -374,7 +369,7 @@
     </script>
 
     <script>
-        const GRADES = { 'S': 10, 'A': 9, 'B': 8, 'C': 7, 'D': 6, 'E': 5, 'F': 0 };
+        const GRADES = { 'S': 10, 'A': 9, 'B': 8, 'C': 7, 'D': 6, 'F': 0, 'V': 0 };
 
         const COURSES = [
             { id: 1, name: "Mathematics III", credits: 4 },
@@ -390,8 +385,42 @@
         let userConstraints = {};
 
         document.addEventListener('DOMContentLoaded', () => {
+            // 1. Load data from Local Storage first
+            loadFromLocal();
+            // 2. Then Initialize UI
             init();
         });
+
+        function loadFromLocal() {
+            // Load Inputs
+            const savedCGPA = localStorage.getItem('nitt_cgpa');
+            const savedCredits = localStorage.getItem('nitt_credits');
+            const savedTarget = localStorage.getItem('nitt_target');
+
+            if (savedCGPA) document.getElementById('currCGPA').value = savedCGPA;
+            if (savedCredits) document.getElementById('currCredits').value = savedCredits;
+            if (savedTarget) document.getElementById('targetCGPA').value = savedTarget;
+
+            // Load Constraints
+            const savedConstraints = localStorage.getItem('nitt_constraints');
+            if (savedConstraints) {
+                try {
+                    userConstraints = JSON.parse(savedConstraints);
+                } catch(e) {
+                    console.error("Error parsing saved constraints");
+                }
+            }
+        }
+
+        window.saveInputs = function() {
+            localStorage.setItem('nitt_cgpa', document.getElementById('currCGPA').value);
+            localStorage.setItem('nitt_credits', document.getElementById('currCredits').value);
+            localStorage.setItem('nitt_target', document.getElementById('targetCGPA').value);
+        }
+
+        function saveConstraints() {
+            localStorage.setItem('nitt_constraints', JSON.stringify(userConstraints));
+        }
 
         function init() {
             const list = document.getElementById('course-list');
@@ -399,6 +428,7 @@
             list.innerHTML = ""; 
 
             COURSES.forEach(course => {
+                // If no saved data for this course, default to ALL
                 if (!userConstraints[course.id]) {
                     userConstraints[course.id] = ['S', 'A', 'B', 'C', 'D'];
                 }
@@ -431,17 +461,22 @@
             if (index > -1) arr.splice(index, 1); 
             else arr.push(grade); 
 
+            // Update UI
             const container = document.getElementById(`grades-${courseId}`);
             const chips = container.children;
             for (let chip of chips) {
                 if (chip.innerText === grade) chip.classList.toggle('active');
             }
+
+            // Save immediately
+            saveConstraints();
         };
 
         window.resetFilters = function() {
             COURSES.forEach(c => {
                 userConstraints[c.id] = ['S', 'A', 'B', 'C', 'D'];
             });
+            saveConstraints(); // Save the reset state
             init();
         };
 
@@ -513,7 +548,7 @@
                         <span style="font-weight:bold; color:var(--text-main)">Option ${i+1}</span>
                         <div class="stat-badges">
                             <span class="stat-badge badge-sem">Sem: ${semGPA}</span>
-                            <span class="stat-badge badge-cgpa">Cum. CGPA: ${finalCGPA}</span>
+                            <span class="stat-badge badge-cgpa">CGPA: ${finalCGPA}</span>
                         </div>
                     </div>
                     <div>`;
