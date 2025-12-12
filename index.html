@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIT Trichy CGPA Planner</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --border: #334155;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        @media (max-width: 800px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        h1, h2, h3 { margin-top: 0; }
+        h1 { color: var(--accent); font-size: 1.5rem; }
+        h2 { font-size: 1.2rem; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+
+        .inputs-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .input-group input {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box; 
+        }
+
+        .input-group input:focus { outline: none; border-color: var(--accent); }
+
+        .course-item {
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        .course-item:last-child { border-bottom: none; }
+
+        .course-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .course-name { font-weight: 600; font-size: 1rem; }
+        .course-credits { font-size: 0.85rem; color: var(--text-muted); background: #334155; padding: 2px 8px; border-radius: 4px; }
+
+        .grade-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .grade-chip {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-muted);
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .grade-chip.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        
+        .grade-chip:hover { filter: brightness(1.1); }
+
+        #results-area { max-height: 600px; overflow-y: auto; }
+
+        .result-item {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .result-header {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border-bottom: 1px solid #334155; 
+            padding-bottom: 8px; 
+            margin-bottom: 8px;
+        }
+
+        .stat-badges {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* TEXT ONLY BADGES (No Background) */
+        .stat-badge {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .badge-sem { color: #38bdf8; }
+        .badge-cgpa { color: #22c55e; }
+
+        .grade-badge {
+            display: inline-block;
+            width: 25px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .grade-S { color: #fbbf24; }
+        .grade-A { color: #a3e635; }
+        .grade-B { color: #38bdf8; }
+        .grade-C { color: #94a3b8; }
+        .grade-D { color: #ef4444; }
+
+        .calculate-btn {
+            width: 100%;
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .calculate-btn:hover { background: #16a34a; }
+
+        .google-btn {
+            background: #4285F4;
+            color: white;
+            transition: background 0.2s;
+        }
+        .google-btn:hover { background: #3367d6; }
+
+        .stat-box {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid var(--accent);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .stat-val { font-size: 1.2rem; font-weight: bold; color: var(--accent); }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+        
+        #course-list:empty::before {
+            content: "Loading courses...";
+            display: block;
+            padding: 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="main-panel">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h1>NIT Trichy CGPA Planner</h1>
+                    <button onclick="resetFilters()" style="background:transparent; border:1px solid var(--border); color:var(--text-muted); padding:5px 10px; border-radius:4px; cursor:pointer;">Reset Filters</button>
+                </div>
+
+                <div class="inputs-grid">
+                    <div class="input-group">
+                        <label>Current CGPA</label>
+                        <input type="number" id="currCGPA" step="0.01" value="9.08">
+                    </div>
+                    <div class="input-group">
+                        <label>Completed Credits</label>
+                        <input type="number" id="currCredits" step="0.5" value="40">
+                    </div>
+                    <div class="input-group">
+                        <label>Target CGPA</label>
+                        <input type="number" id="targetCGPA" step="0.01" value="9.0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Sem III Courses (Predict Your Grades)</h2>
+                <div id="course-list">
+                    </div>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            
+            <div class="card" id="auth-section">
+                <button class="calculate-btn google-btn" onclick="login()">Sign in with Google</button>
+            </div>
+
+            <div class="card">
+                <h2>Analysis</h2>
+                <div class="stat-box">
+                    <div class="stat-val" id="points-needed">--</div>
+                    <div class="stat-label">Points Needed This Sem</div>
+                </div>
+                <button class="calculate-btn" onclick="calculate()">Calculate Paths</button>
+                <p style="text-align:center; font-size:0.8rem; color:var(--text-muted); margin-top:10px;">
+                    Showing top 50 combinations
+                </p>
+            </div>
+
+            <div class="card">
+                <h2>Possible Scenarios</h2>
+                <div id="results-area">
+                    <div style="text-align:center; color:var(--text-muted); padding:20px;">
+                        Click "Calculate" to see options.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // ===============================================================
+        // PASTE YOUR FIREBASE CONFIG HERE
+        // ===============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCh3Wi_RRz71TjF0N6VS8b8pfxY63GSOyo",
+            authDomain: "nitt-cgpa.firebaseapp.com",
+            projectId: "nitt-cgpa",
+            storageBucket: "nitt-cgpa.firebasestorage.app",
+            messagingSenderId: "207174838364",
+            appId: "1:207174838364:web:1a80f949b60678d2429e99",
+            measurementId: "G-PHKHPVBY7F"
+        };
+        // ===============================================================
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUser = null;
+
+        // Make functions globally available for HTML buttons
+        window.login = async function() {
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error("Login Error:", error);
+                alert("Login failed: " + error.message);
+            }
+        }
+
+        window.logout = function() {
+            signOut(auth).catch(console.error);
+        }
+
+        window.saveData = async function() {
+            if (!currentUser) return alert("Please login first!");
+            
+            const target = document.getElementById('targetCGPA').value;
+            const pointsNeeded = document.getElementById('points-needed').innerText;
+            
+            // Collect User's Predictions
+            const predictions = COURSES.map(c => {
+                return { 
+                    subject: c.name, 
+                    allowed: userConstraints[c.id] || [] 
+                };
+            });
+
+            try {
+                await addDoc(collection(db, "user_predictions"), {
+                    uid: currentUser.uid,
+                    name: currentUser.displayName,
+                    email: currentUser.email,
+                    targetCGPA: target,
+                    pointsNeeded: pointsNeeded,
+                    constraints: predictions,
+                    timestamp: serverTimestamp()
+                });
+                alert("Prediction settings saved to Database!");
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                alert("Error saving data. Check console.");
+            }
+        }
+
+        // Monitor Auth State
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            updateAuthUI(user);
+        });
+
+        function updateAuthUI(user) {
+            const authDiv = document.getElementById('auth-section');
+            if (user) {
+                authDiv.innerHTML = `
+                    <div style="font-size:0.9rem; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Hi, <span style="color:var(--accent)">${user.displayName.split(' ')[0]}</span></span>
+                        <button onclick="logout()" style="background:transparent; border:1px solid #334155; color:#94a3b8; border-radius:4px; padding:2px 8px; cursor:pointer; font-size:0.75rem;">Logout</button>
+                    </div>
+                    <button class="calculate-btn" style="background:var(--accent); color:white;" onclick="saveData()">
+                        Save My Constraints
+                    </button>
+                `;
+            } else {
+                authDiv.innerHTML = `
+                    <div style="margin-bottom:5px; font-size:0.85rem; color:var(--text-muted)">Want to save your data?</div>
+                    <button class="calculate-btn google-btn" onclick="login()">Sign in with Google</button>
+                `;
+            }
+        }
+    </script>
+
+    <script>
+        const GRADES = { 'S': 10, 'A': 9, 'B': 8, 'C': 7, 'D': 6, 'E': 5, 'F': 0 };
+
+        const COURSES = [
+            { id: 1, name: "Mathematics III", credits: 4 },
+            { id: 2, name: "Principles of Prog Lang", credits: 4 },
+            { id: 3, name: "Data Structures", credits: 3 },
+            { id: 4, name: "Digital Systems Design", credits: 3 },
+            { id: 5, name: "Computer Organization", credits: 3 },
+            { id: 6, name: "Combinatorics & Graph", credits: 3 },
+            { id: 7, name: "Data Structures Lab", credits: 2 },
+            { id: 8, name: "Digital Lab", credits: 2 }
+        ];
+
+        let userConstraints = {};
+
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+        });
+
+        function init() {
+            const list = document.getElementById('course-list');
+            if (!list) return;
+            list.innerHTML = ""; 
+
+            COURSES.forEach(course => {
+                if (!userConstraints[course.id]) {
+                    userConstraints[course.id] = ['S', 'A', 'B', 'C', 'D'];
+                }
+
+                const div = document.createElement('div');
+                div.className = 'course-item';
+                
+                const chipsHtml = Object.keys(GRADES).map(g => {
+                    const isActive = userConstraints[course.id].includes(g) ? 'active' : '';
+                    return `<div class="grade-chip ${isActive}" onclick="toggleGrade(${course.id}, '${g}')">${g}</div>`;
+                }).join('');
+
+                div.innerHTML = `
+                    <div class="course-header">
+                        <span class="course-name">${course.name}</span>
+                        <span class="course-credits">${course.credits} Cr</span>
+                    </div>
+                    <div class="grade-options" id="grades-${course.id}">
+                        ${chipsHtml}
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        window.toggleGrade = function(courseId, grade) {
+            const arr = userConstraints[courseId];
+            const index = arr.indexOf(grade);
+            
+            if (index > -1) arr.splice(index, 1); 
+            else arr.push(grade); 
+
+            const container = document.getElementById(`grades-${courseId}`);
+            const chips = container.children;
+            for (let chip of chips) {
+                if (chip.innerText === grade) chip.classList.toggle('active');
+            }
+        };
+
+        window.resetFilters = function() {
+            COURSES.forEach(c => {
+                userConstraints[c.id] = ['S', 'A', 'B', 'C', 'D'];
+            });
+            init();
+        };
+
+        window.calculate = function() {
+            const currCGPA = parseFloat(document.getElementById('currCGPA').value);
+            const currCredits = parseFloat(document.getElementById('currCredits').value);
+            const targetCGPA = parseFloat(document.getElementById('targetCGPA').value);
+
+            let semCredits = COURSES.reduce((acc, c) => acc + c.credits, 0);
+            let totalCredits = currCredits + semCredits;
+
+            let requiredTotalPoints = targetCGPA * totalCredits;
+            let currentPoints = currCGPA * currCredits;
+            let targetSemPoints = requiredTotalPoints - currentPoints;
+
+            document.getElementById('points-needed').innerText = targetSemPoints.toFixed(2);
+
+            const results = [];
+            let count = 0;
+            const MAX_RESULTS = 50;
+
+            function solve(index, currentPointsAccumulated, history) {
+                if (count >= MAX_RESULTS) return;
+
+                if (index === COURSES.length) {
+                    if (currentPointsAccumulated >= targetSemPoints) {
+                        results.push({ points: currentPointsAccumulated, history: [...history] });
+                        count++;
+                    }
+                    return;
+                }
+
+                const course = COURSES[index];
+                const allowed = userConstraints[course.id];
+                
+                if (!allowed || allowed.length === 0) return;
+
+                for (let g of allowed) {
+                    let p = GRADES[g];
+                    solve(index + 1, currentPointsAccumulated + (p * course.credits), [...history, {name: course.name, grade: g}]);
+                    if (count >= MAX_RESULTS) return; 
+                }
+            }
+
+            solve(0, 0, []);
+            renderResults(results, semCredits, currCGPA, currCredits);
+        };
+
+        function renderResults(results, semCredits, currCGPA, currCredits) {
+            const area = document.getElementById('results-area');
+            area.innerHTML = "";
+
+            if (results.length === 0) {
+                area.innerHTML = "<div style='padding:20px; color:var(--danger); text-align:center'>No paths found.<br>Try enabling higher grades or lowering target.</div>";
+                return;
+            }
+
+            results.sort((a, b) => a.points - b.points);
+
+            results.forEach((res, i) => {
+                const semGPA = (res.points / semCredits).toFixed(2);
+                
+                const finalTotalPoints = (currCGPA * currCredits) + res.points;
+                const finalTotalCredits = currCredits + semCredits;
+                const finalCGPA = (finalTotalPoints / finalTotalCredits).toFixed(2);
+
+                let html = `<div class="result-item">
+                    <div class="result-header">
+                        <span style="font-weight:bold; color:var(--text-main)">Option ${i+1}</span>
+                        <div class="stat-badges">
+                            <span class="stat-badge badge-sem">Sem: ${semGPA}</span>
+                            <span class="stat-badge badge-cgpa">Cum. CGPA: ${finalCGPA}</span>
+                        </div>
+                    </div>
+                    <div>`;
+                
+                res.history.forEach(item => {
+                    html += `<div style="display:flex; justify-content:space-between; margin-top:4px;">
+                                <span style="color:var(--text-muted); font-size:0.85rem">${item.name}</span>
+                                <span class="grade-badge grade-${item.grade}">${item.grade}</span>
+                             </div>`;
+                });
+
+                html += `</div></div>`;
+                area.innerHTML += html;
+            });
+        }
+    </script>
+</body>
+</html>
