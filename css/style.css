@@ -117,10 +117,13 @@ h2 {
 .main-input:disabled { opacity: 0.5; cursor: not-allowed; background: #000; border-color: var(--border); }
 
 /* --- COURSE LIST --- */
-.course-item {
-    display: grid; grid-template-columns: 1fr 60px auto; gap: 16px;
-    padding: 16px 0; border-bottom: 1px solid var(--border); align-items: center;
-    position: relative;
+course-item {
+    display: grid;
+    grid-template-columns: 1fr 60px 160px 30px; 
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
 }
 .course-item:last-child { border-bottom: none; }
 
@@ -146,25 +149,31 @@ h2 {
 .type-toggle.is-oe:hover { background: #fbbf24; color: black; }
 
 .elective-select, .grade-select-actual {
+    width: 100%; height: 36px; margin: 0;
     background: var(--bg); border: 1px solid var(--border); color: var(--text-main);
-    padding: 8px; border-radius: 6px; width: 100%; margin-top: 6px; font-size: 0.9rem;
-    cursor: pointer;
+    padding: 0 8px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
 }
 .elective-select:hover, .grade-select-actual:hover { border-color: var(--text-muted); }
 .grade-select-actual.error { border-color: var(--danger); animation: shake 0.3s; }
 
-.credits-box {
-    text-align: center; color: var(--text-muted); font-weight: 600; font-size: 0.9rem;
-    padding: 8px 0; border: 1px solid var(--border); border-radius: 6px; background: var(--bg);
-    width: 100%;
+/* Credits Column */
+.credits-box, .credits-edit {
+    width: 100%; 
+    text-align: center;
+    height: 36px;
+    line-height: 34px;
+    padding: 0;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
 }
-.credits-edit {
-    width: 100%; text-align: center; background: var(--bg); border: 1px solid var(--border);
-    color: var(--text-main); padding: 6px; border-radius: 4px;
-}
+.credits-box { background: var(--input-bg); border: 1px solid var(--border); color: var(--text-muted); }
+.credits-edit { background: var(--bg); border: 1px solid var(--border); color: var(--text-main); }
 
 /* --- CHIPS --- */
-.grade-options { display: flex; gap: 4px; }
+.grade-options { 
+    display: flex; justify-content: flex-end; gap: 4px; height: 36px; align-items: center;
+}
 .grade-chip {
     width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
     border-radius: 6px; border: 1px solid var(--border); background: var(--bg);
@@ -187,17 +196,28 @@ h2 {
 .save-btn:hover { background: #059669; }
 
 .add-btn {
-    background: transparent; border: 1px dashed var(--border); color: var(--text-muted);
-    width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; margin-top: 16px;
-    transition: all 0.2s; display: block; text-align: center; font-size: 0.9rem;
+    background: rgba(255,255,255,0.03); 
+    border: 1px dashed var(--border); 
+    color: var(--text-muted);
+    width: 100%; 
+    padding: 10px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    margin-top: 12px;
+    font-size: 0.85rem; 
+    font-weight: 600;
+    transition: all 0.2s;
 }
-.add-btn:hover { border-color: var(--text-muted); color: var(--text-main); background: var(--bg); }
+.add-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(99, 102, 241, 0.05); }
 
 .delete-course-btn {
-    position: absolute; right: 0; top: 0; background: transparent; border: none;
-    color: var(--danger); font-size: 1.2rem; cursor: pointer; opacity: 0.4; padding: 5px;
+    position: static;
+    background: transparent; border: none;
+    color: var(--danger); font-size: 1.2rem; cursor: pointer; 
+    opacity: 0.4; display: flex; align-items: center; justify-content: center;
+    height: 36px; width: 100%; padding: 0;
 }
-.delete-course-btn:hover { opacity: 1; }
+.delete-course-btn:hover { opacity: 1; background: rgba(239, 68, 68, 0.1); border-radius: 6px; }
 
 /* --- RESULTS --- */
 .result-card {

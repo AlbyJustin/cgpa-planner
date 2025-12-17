@@ -24,16 +24,17 @@ export function renderCourses() {
         const div = document.createElement('div');
         div.className = 'course-item';
 
-        // INFO
-        let infoHtml = `<div><div style="margin-bottom:4px; display:flex; align-items:center;">
-            <span class="badge">${c.type}</span>`;
-        
-        if(c.type === "PE/OE") {
+        // 1. NAME COLUMN
+        let infoHtml = `<div>`;
+        // Badge Row
+        if (c.type === "PE/OE") {
             const isOE = c.currentType === "OE";
-            infoHtml += `<button class="type-toggle ${isOE?'is-oe':''}" onclick="window.app.toggleCourseType('${c.id}')">⇄ ${c.currentType}</button>`;
+            infoHtml += `<div style="margin-bottom:4px;"><span class="badge">${c.type}</span><button class="type-toggle ${isOE?'is-oe':''}" onclick="window.app.toggleCourseType('${c.id}')">⇄ ${c.currentType}</button></div>`;
+        } else {
+            infoHtml += `<div style="margin-bottom:4px;"><span class="badge">${c.type}</span></div>`;
         }
-        infoHtml += `</div>`;
 
+        // Input/Text Row
         if(c.type === "Extra") {
             infoHtml += `<input type="text" class="course-name-edit" value="${c.name}" onchange="window.app.updateCustomName('${c.id}', this.value)">`;
         } else if (c.opts) {
@@ -43,7 +44,7 @@ export function renderCourses() {
         }
         infoHtml += `</div>`;
 
-        // CREDITS
+        // 2. CREDITS COLUMN
         let crHtml = "";
         if(c.type === "Extra") {
              crHtml = `<input type="number" class="credits-edit" value="${c.cr}" onchange="window.app.updateCustomCredits('${c.id}', this.value)">`;
@@ -51,7 +52,7 @@ export function renderCourses() {
              crHtml = `<div class="credits-box">${c.cr}</div>`;
         }
 
-        // INPUTS
+        // 3. GRADE COLUMN
         let inputHtml = `<div>`;
         if (state.mode === 'check') {
             const val = state.actualGrades[c.id] || "";
@@ -69,11 +70,14 @@ export function renderCourses() {
         }
         inputHtml += `</div>`;
 
+        // 4. ACTION COLUMN
+        let actionHtml = `<div>`;
         if(c.type === "Extra") {
-            inputHtml += `<button class="delete-course-btn" onclick="window.app.deleteCustomCourse('${c.id}')">&times;</button>`;
+            actionHtml += `<button class="delete-course-btn" onclick="window.app.deleteCustomCourse('${c.id}')">&times;</button>`;
         }
+        actionHtml += `</div>`;
 
-        div.innerHTML = infoHtml + crHtml + inputHtml;
+        div.innerHTML = infoHtml + crHtml + inputHtml + actionHtml;
         list.appendChild(div);
     });
     
