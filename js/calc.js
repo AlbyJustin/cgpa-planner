@@ -11,42 +11,68 @@ export function calculateLiveStats() {
         }
     });
     
+    // Update DOM if valid
     if (totalCr > 0) {
         const sgpa = totalPts / totalCr;
-        document.getElementById('live-sgpa').innerText = sgpa.toFixed(2);
+        const elSgpa = document.getElementById('live-sgpa');
+        if(elSgpa) elSgpa.innerText = sgpa.toFixed(2);
         
         const prevHist = state.academicHistory[parseInt(state.currentSem)-1];
         const newTotalPts = (prevHist.cgpa * prevHist.credits) + totalPts;
         const newTotalCr = prevHist.credits + totalCr;
         const cgpa = newTotalPts / newTotalCr;
-        document.getElementById('live-cgpa').innerText = cgpa.toFixed(2);
+        const elCgpa = document.getElementById('live-cgpa');
+        if(elCgpa) elCgpa.innerText = cgpa.toFixed(2);
     }
 }
 
 export function solveWorstCase(targetPts) {
-    const courseConfig = state.activeCourses.map(c => ({
-        id: c.id, name: c.name, cr: c.cr,
-        allowed: (state.userConstraints[c.id] || []).sort((a,b) => GRADES[a] - GRADES[b])
-    }));
+    const courses = state.activeCourses.map(c => {
+        const allowed = (state.userConstraints[c.id] || []).slice();
+        allowed.sort((a,b) => GRADES[a] - GRADES[b]);
+        return {
+            id: c.id,
+            name: c.name,
+            cr: c.cr,
+            allowed: allowed,
+            currentIdx: 0 
+        };
+    });
 
-    let bestSolution = null;
-    
-    function backtrack(idx, currentPts, history) {
-        if (bestSolution) return; 
-        if (idx === courseConfig.length) {
-            if (currentPts >= targetPts - 0.5) {
-                bestSolution = { points: currentPts, history: history };
+    if (courses.some(c => c.allowed.length === 0)) return null;
+
+    while (true) {
+        let currentPts = 0;
+        let history = [];
+        courses.forEach(c => {
+            const grade = c.allowed[c.currentIdx];
+            currentPts += GRADES[grade] * c.cr;
+            history.push({ name: c.name, grade: grade });
+        });
+
+        if (currentPts >= targetPts - 0.01) {
+            return { points: currentPts, history: history };
+        }
+
+        let bestCourse = null;
+        let bestUpgradeVal = 999;
+        let bestUpgradeCr = -1;
+
+        for (let c of courses) {
+            if (c.currentIdx < c.allowed.length - 1) {
+                const nextGrade = c.allowed[c.currentIdx + 1];
+                const nextVal = GRADES[nextGrade];
+
+                if (nextVal < bestUpgradeVal || (nextVal === bestUpgradeVal && c.cr > bestUpgradeCr)) {
+                    bestCourse = c;
+                    bestUpgradeVal = nextVal;
+                    bestUpgradeCr = c.cr;
+                }
             }
-            return;
         }
-        const crs = courseConfig[idx];
-        if (crs.allowed.length === 0) return;
-        for (let g of crs.allowed) {
-            backtrack(idx + 1, currentPts + (GRADES[g] * crs.cr), [...history, {name: crs.name, grade: g}]);
-            if (bestSolution) return;
-        }
+
+        if (!bestCourse) return null;
+
+        bestCourse.currentIdx++;
     }
-    
-    backtrack(0, 0, []);
-    return bestSolution;
 }
