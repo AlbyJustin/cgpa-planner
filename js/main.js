@@ -1,4 +1,5 @@
-import { state, loadHistory, saveHistory, loadSemesterConfig } from './store.js';
+import { state, loadHistory, saveHistory, loadSemesterConfig, syncFromCloud } from './store.js';
+import { onAuthStateChanged } from './auth.js';
 import { TEMPLATES, PREDICT_DEFAULT } from './data.js';
 import { renderCourses, renderTabState, showToast, handleToggleCourseType } from './ui.js';
 import { calculateLiveStats, solveWorstCase } from './calc.js';
@@ -168,6 +169,28 @@ document.addEventListener('DOMContentLoaded', () => {
     loadHistory();
     renderTabState();
     loadSemester("3");
+
+    // Listen for Login
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            document.querySelector('.google-btn').innerText = `Synced: ${user.displayName.split(' ')[0]}`;
+            // When user logs in, pull their data
+            const updated = await syncFromCloud();
+            if (updated) {
+                // If we got new data, refresh the UI
+                renderTabState();
+                
+                // If on Sem 3, update the inputs to match new history
+                const hist = state.academicHistory["2"];
+                if(state.currentSem === "3" && hist) {
+                   document.getElementById('currCGPA').value = hist.cgpa;
+                   document.getElementById('currCredits').value = hist.credits;
+                }
+                
+                showToast("Data downloaded from Cloud!");
+            }
+        }
+    });
 });
 
 window.app = {

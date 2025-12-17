@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"; // NEW
 
 const firebaseConfig = {
     apiKey: "AIzaSyCh3Wi_RRz71TjF0N6VS8b8pfxY63GSOyo",
@@ -13,6 +14,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
 export async function login() {
@@ -23,6 +25,6 @@ export async function login() {
     }
 }
 
-onAuthStateChanged(auth, (user) => {
-    if(user) document.querySelector('.google-btn').innerText = `Synced: ${user.displayName.split(' ')[0]}`;
-});
+// Export db and auth for other files to use
+export { auth, db, onAuthStateChanged };
+
