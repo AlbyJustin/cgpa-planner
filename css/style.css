@@ -1,5 +1,5 @@
 :root {
-    /* MODERN DARK THEME */
+    /* MODERN DEVELOPER DARK THEME */
     --bg: #09090b;           /* Zinc 950 */
     --card-bg: #18181b;      /* Zinc 900 */
     --border: #27272a;       /* Zinc 800 */
@@ -47,7 +47,7 @@ body {
     border-radius: 12px;
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 h1 { 
@@ -55,7 +55,6 @@ h1 {
     margin-top: 0; 
     font-size: 1.5rem; 
     font-weight: 700;
-    letter-spacing: -0.025em;
 } 
 
 h2 { 
@@ -104,7 +103,7 @@ h2 {
     padding: 8px; cursor: pointer; border-radius: 6px; font-size: 0.85rem; font-weight: 600;
     transition: color 0.2s;
 }
-.mode-btn.active { background: var(--card-bg); color: var(--text-main); shadow: 0 1px 2px rgba(0,0,0,0.2); }
+.mode-btn.active { background: var(--card-bg); color: var(--text-main); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
 
 /* --- INPUTS --- */
 .input-group label { display: block; color: var(--text-muted); font-size: 0.75rem; margin-bottom: 6px; font-weight: 500; }
@@ -116,108 +115,162 @@ h2 {
 .main-input:focus { outline: none; border-color: var(--accent); }
 .main-input:disabled { opacity: 0.5; cursor: not-allowed; background: #000; border-color: var(--border); }
 
-/* --- COURSE LIST --- */
-course-item {
+/* --- COURSE LIST GRID (Strict 5-Column Alignment) --- */
+.course-item {
     display: grid;
-    grid-template-columns: 1fr 60px 160px 30px; 
+    /* Col 1: Badge (Fixed 55px) | Col 2: Name (Flex) | Col 3: Cr (Fixed 60px) | Col 4: Gr (Fixed 160px) | Col 5: Del (Fixed 40px) */
+    grid-template-columns: 55px 1fr 60px 160px 40px; 
     gap: 12px;
-    padding: 12px 0;
+    padding: 10px 0;
     border-bottom: 1px solid var(--border);
-    align-items: center;
+    /* Strict vertical centering for the row */
+    align-items: center; 
 }
 .course-item:last-child { border-bottom: none; }
 
-.course-name-fixed { font-weight: 500; font-size: 0.95rem; color: var(--text-main); }
-.course-name-edit {
-    background: var(--bg); border: 1px solid var(--border); color: var(--text-main);
-    padding: 6px; border-radius: 4px; width: 100%; font-size: 0.9rem;
+/* 1. Badge Column (Centered) */
+.course-item > div:nth-child(1) {
+    display: flex; justify-content: center; align-items: center;
 }
 
+/* Minimal Badge Style */
 .badge {
-    font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border);
-    color: var(--text-muted); background: var(--bg); text-transform: uppercase; display: inline-block; font-weight: 600;
+    font-size: 0.6rem; 
+    padding: 2px 4px; 
+    border-radius: 4px; 
+    border: 1px solid var(--border);
+    color: var(--text-muted); background: var(--bg); 
+    text-transform: uppercase; font-weight: 700; 
+    width: 100%; text-align: center; letter-spacing: 0.5px;
+    white-space: nowrap;
 }
 
+/* Minimal Toggle Button */
 .type-toggle {
-    font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; 
-    background: rgba(99, 102, 241, 0.1); color: var(--accent); border: 1px solid var(--accent);
-    cursor: pointer; font-weight: 600; margin-left: 8px; text-transform: uppercase;
-    transition: all 0.2s;
+    font-size: 0.6rem; 
+    padding: 2px 0; 
+    border-radius: 4px; 
+    width: 100%; text-align: center;
+    background: rgba(99, 102, 241, 0.1); 
+    color: var(--accent); border: 1px solid var(--accent);
+    cursor: pointer; font-weight: 700; text-transform: uppercase;
+    transition: all 0.2s; white-space: nowrap;
 }
 .type-toggle:hover { background: var(--accent); color: white; }
 .type-toggle.is-oe { background: rgba(251, 191, 36, 0.1); color: #fbbf24; border-color: #fbbf24; }
 .type-toggle.is-oe:hover { background: #fbbf24; color: black; }
 
-.elective-select, .grade-select-actual {
+/* 2. Name Column (Stretches) */
+.course-name-fixed { 
+    font-weight: 500; font-size: 0.9rem; color: var(--text-main); 
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 36px; /* Matches input height */
+}
+.course-name-edit, .elective-select {
     width: 100%; height: 36px; margin: 0;
     background: var(--bg); border: 1px solid var(--border); color: var(--text-main);
-    padding: 0 8px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+    padding: 0 10px; border-radius: 6px; font-size: 0.85rem; font-family: inherit;
 }
-.elective-select:hover, .grade-select-actual:hover { border-color: var(--text-muted); }
-.grade-select-actual.error { border-color: var(--danger); animation: shake 0.3s; }
+.elective-select:hover { border-color: var(--text-muted); cursor: pointer; }
 
-/* Credits Column */
+/* 3. Credits Column (Centered) */
+.course-item > div:nth-child(3) { display: flex; justify-content: center; }
 .credits-box, .credits-edit {
-    width: 100%; 
-    text-align: center;
-    height: 36px;
-    line-height: 34px;
-    padding: 0;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.9rem;
+    width: 100%; height: 36px; margin: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px; font-weight: 600; font-size: 0.9rem;
 }
 .credits-box { background: var(--input-bg); border: 1px solid var(--border); color: var(--text-muted); }
-.credits-edit { background: var(--bg); border: 1px solid var(--border); color: var(--text-main); }
+.credits-edit { background: var(--bg); border: 1px solid var(--border); color: var(--text-main); text-align: center; }
 
-/* --- CHIPS --- */
-.grade-options { 
-    display: flex; justify-content: flex-end; gap: 4px; height: 36px; align-items: center;
+/* 4. Grade Column (Centered) */
+.course-item > div:nth-child(4) { display: flex; justify-content: center; }
+.grade-select-actual {
+    width: 100%; height: 36px; margin: 0;
+    background: var(--bg); border: 1px solid var(--border); color: var(--text-main);
+    padding: 0 10px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
 }
+.grade-select-actual:hover { border-color: var(--text-muted); }
+.grade-select-actual.error { border-color: var(--danger); animation: shake 0.3s; }
+
+.grade-options { display: flex; justify-content: flex-end; gap: 4px; width: 100%; }
 .grade-chip {
-    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; 
+    display: flex; align-items: center; justify-content: center;
     border-radius: 6px; border: 1px solid var(--border); background: var(--bg);
     color: var(--text-muted); cursor: pointer; font-weight: 600; font-size: 0.85rem;
-    transition: all 0.2s; user-select: none;
+    transition: all 0.2s; padding: 0; margin: 0;
 }
 .grade-chip:hover { border-color: var(--text-muted); color: var(--text-main); }
 .grade-chip.active { background: var(--text-main); color: var(--bg); border-color: var(--text-main); }
-.grade-chip.inactive { opacity: 0.3; } 
+.grade-chip.inactive { opacity: 0.3; }
+
+/* 5. Delete Column (Centered) */
+.course-item > div:nth-child(5) { display: flex; justify-content: center; }
+.delete-course-btn {
+    width: 32px; height: 32px; 
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; padding: 0; margin: 0;
+    color: var(--danger); font-size: 1.2rem; cursor: pointer; opacity: 0.4;
+}
+.delete-course-btn:hover { opacity: 1; background: rgba(239, 68, 68, 0.1); border-radius: 6px; }
 
 /* --- BUTTONS --- */
 .calculate-btn {
-    width: 100%; background: var(--text-main); color: var(--bg); border: none; padding: 14px;
-    font-weight: 700; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 0.95rem;
-    transition: transform 0.1s;
+    width: 100%; 
+    padding: 12px;
+    font-weight: 700; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    margin-top: 10px; 
+    font-size: 0.95rem;
+    border: none;
+    transition: filter 0.2s, transform 0.1s;
 }
 .calculate-btn:active { transform: scale(0.98); }
 
-.save-btn { background: var(--success); color: white; }
-.save-btn:hover { background: #059669; }
+/* Main Action (Calculate) - Dark Text on Light BG */
+.calculate-btn:not(.save-btn):not(.google-btn) {
+    background: var(--text-main); 
+    color: var(--bg);
+}
+.calculate-btn:not(.save-btn):not(.google-btn):hover { opacity: 0.9; }
 
+/* Save Button - Solid Green */
+.save-btn { 
+    background: #22c55e; 
+    color: white;
+}
+.save-btn:hover { 
+    background: #16a34a; 
+    filter: brightness(1.1);
+}
+
+/* Google Sync Button - Solid Blue */
+.google-btn { 
+    background: #4285F4; 
+    color: white; 
+}
+.google-btn:hover { 
+    background: #3367d6; 
+    filter: brightness(1.1);
+}
+
+/* Add Button (Minimal/Ghost style) */
 .add-btn {
-    background: rgba(255,255,255,0.03); 
+    background: rgba(255,255,255,0.02); 
     border: 1px dashed var(--border); 
     color: var(--text-muted);
     width: 100%; 
-    padding: 10px; 
-    border-radius: 8px; 
+    height: 38px; /* Matches input height roughly */
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px; 
     cursor: pointer; 
     margin-top: 12px;
-    font-size: 0.85rem; 
-    font-weight: 600;
+    font-size: 0.85rem; font-weight: 500;
     transition: all 0.2s;
 }
 .add-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(99, 102, 241, 0.05); }
-
-.delete-course-btn {
-    position: static;
-    background: transparent; border: none;
-    color: var(--danger); font-size: 1.2rem; cursor: pointer; 
-    opacity: 0.4; display: flex; align-items: center; justify-content: center;
-    height: 36px; width: 100%; padding: 0;
-}
-.delete-course-btn:hover { opacity: 1; background: rgba(239, 68, 68, 0.1); border-radius: 6px; }
 
 /* --- RESULTS --- */
 .result-card {
@@ -232,9 +285,6 @@ course-item {
 }
 .mg-name { font-size: 0.8rem; color: var(--text-muted); }
 .mg-val { font-weight: 600; color: var(--text-main); font-size: 0.9rem; }
-
-.google-btn { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border); }
-.google-btn:hover { background: var(--bg); border-color: var(--text-muted); }
 
 /* --- TOAST --- */
 #toast {

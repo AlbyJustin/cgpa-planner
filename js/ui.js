@@ -24,60 +24,63 @@ export function renderCourses() {
         const div = document.createElement('div');
         div.className = 'course-item';
 
-        // 1. NAME COLUMN
-        let infoHtml = `<div>`;
-        // Badge Row
+        // 1. BADGE COLUMN (Fixed 85px)
+        let badgeHtml = `<div>`;
         if (c.type === "PE/OE") {
             const isOE = c.currentType === "OE";
-            infoHtml += `<div style="margin-bottom:4px;"><span class="badge">${c.type}</span><button class="type-toggle ${isOE?'is-oe':''}" onclick="window.app.toggleCourseType('${c.id}')">⇄ ${c.currentType}</button></div>`;
+            badgeHtml += `<button class="type-toggle ${isOE?'is-oe':''}" onclick="window.app.toggleCourseType('${c.id}')">⇄ ${c.currentType}</button>`;
         } else {
-            infoHtml += `<div style="margin-bottom:4px;"><span class="badge">${c.type}</span></div>`;
+            badgeHtml += `<span class="badge">${c.type}</span>`;
         }
+        badgeHtml += `</div>`;
 
-        // Input/Text Row
+        // 2. NAME COLUMN (Flex 1fr)
+        let nameHtml = `<div>`;
         if(c.type === "Extra") {
-            infoHtml += `<input type="text" class="course-name-edit" value="${c.name}" onchange="window.app.updateCustomName('${c.id}', this.value)">`;
+            nameHtml += `<input type="text" class="course-name-edit" value="${c.name}" onchange="window.app.updateCustomName('${c.id}', this.value)" placeholder="Course Name">`;
         } else if (c.opts) {
-            infoHtml += `<select class="elective-select"><option>${c.name} (Select)</option>${c.opts.map(o => `<option>${o}</option>`).join('')}</select>`;
+            nameHtml += `<select class="elective-select"><option>${c.name} (Select)</option>${c.opts.map(o => `<option>${o}</option>`).join('')}</select>`;
         } else {
-            infoHtml += `<div class="course-name-fixed">${c.name}</div>`;
+            nameHtml += `<div class="course-name-fixed">${c.name}</div>`;
         }
-        infoHtml += `</div>`;
+        nameHtml += `</div>`;
 
-        // 2. CREDITS COLUMN
-        let crHtml = "";
+        // 3. CREDITS COLUMN (Fixed 60px)
+        let crHtml = `<div>`;
         if(c.type === "Extra") {
-             crHtml = `<input type="number" class="credits-edit" value="${c.cr}" onchange="window.app.updateCustomCredits('${c.id}', this.value)">`;
+             crHtml += `<input type="number" class="credits-edit" value="${c.cr}" onchange="window.app.updateCustomCredits('${c.id}', this.value)">`;
         } else {
-             crHtml = `<div class="credits-box">${c.cr}</div>`;
+             crHtml += `<div class="credits-box">${c.cr}</div>`;
         }
+        crHtml += `</div>`;
 
-        // 3. GRADE COLUMN
-        let inputHtml = `<div>`;
+        // 4. GRADE COLUMN (Fixed 160px)
+        let gradeHtml = `<div>`;
         if (state.mode === 'check') {
             const val = state.actualGrades[c.id] || "";
-            inputHtml += `<select id="grade-${c.id}" class="grade-select-actual" onchange="window.app.updateActual('${c.id}', this.value)">
+            gradeHtml += `<select id="grade-${c.id}" class="grade-select-actual" onchange="window.app.updateActual('${c.id}', this.value)">
                 <option value="" disabled ${val===""?"selected":""}>Grade</option>
                 ${CHECK_KEYS.map(g => `<option value="${g}" ${val===g?"selected":""}>${g} (${GRADES[g]})</option>`).join('')}
             </select>`;
         } else {
-            inputHtml += `<div class="grade-options">`;
+            gradeHtml += `<div class="grade-options">`;
             PREDICT_FULL.forEach(g => {
                 const active = state.userConstraints[c.id].includes(g) ? 'active' : 'inactive';
-                inputHtml += `<div class="grade-chip ${active}" onclick="window.app.toggleConstraint('${c.id}', '${g}')">${g}</div>`;
+                gradeHtml += `<div class="grade-chip ${active}" onclick="window.app.toggleConstraint('${c.id}', '${g}')">${g}</div>`;
             });
-            inputHtml += `</div>`;
+            gradeHtml += `</div>`;
         }
-        inputHtml += `</div>`;
+        gradeHtml += `</div>`;
 
-        // 4. ACTION COLUMN
+        // 5. ACTION COLUMN (Fixed 40px)
         let actionHtml = `<div>`;
         if(c.type === "Extra") {
             actionHtml += `<button class="delete-course-btn" onclick="window.app.deleteCustomCourse('${c.id}')">&times;</button>`;
         }
         actionHtml += `</div>`;
 
-        div.innerHTML = infoHtml + crHtml + inputHtml + actionHtml;
+        // Assemble 5 distinct grid children
+        div.innerHTML = badgeHtml + nameHtml + crHtml + gradeHtml + actionHtml;
         list.appendChild(div);
     });
     
