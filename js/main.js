@@ -16,18 +16,43 @@ function loadSemester(sem) {
     document.getElementById('currCGPA').disabled = disableStart;
     document.getElementById('currCredits').disabled = disableStart;
 
-    let savedCourses = loadSemesterConfig(sem);
-    if(savedCourses && savedCourses !== "undefined") {
-        state.activeCourses = JSON.parse(savedCourses);
+    // LOAD DATA
+    const savedJSON = loadSemesterConfig(sem);
+    
+    if (savedJSON) {
+        // If we have saved data, parse the bundle
+        const data = JSON.parse(savedJSON);
+        
+        // Handle legacy data (if user only had course list saved previously)
+        if (Array.isArray(data)) {
+            state.activeCourses = data; 
+            state.actualGrades = {};
+            state.userConstraints = {};
+        } else {
+            // New format (Bundle)
+            state.activeCourses = data.courses || [];
+            state.actualGrades = data.grades || {};
+            state.userConstraints = data.constraints || {};
+        }
     } else {
+        // Load Template if no save exists
         state.activeCourses = JSON.parse(JSON.stringify(TEMPLATES[sem]));
+        state.actualGrades = {};
+        state.userConstraints = {};
     }
 
+    // Ensure defaults exist for any missing constraints
     state.activeCourses.forEach(c => {
         if(!state.userConstraints[c.id]) state.userConstraints[c.id] = [...PREDICT_DEFAULT];
         if(state.actualGrades[c.id] === undefined) state.actualGrades[c.id] = "";
     });
+
     renderCourses();
+    
+    // Recalculate stats immediately to show the SGPA/CGPA
+    if (state.mode === 'check') {
+        calculateLiveStats();
+    }
 }
 
 function switchTab(sem) {
@@ -176,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cgpaInput) cgpaInput.value = startHistory.cgpa;
         if (creditsInput) creditsInput.value = startHistory.credits;
     }
-    
+
     renderTabState();
     loadSemester("3");
 
