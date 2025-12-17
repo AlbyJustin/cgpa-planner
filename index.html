@@ -3,631 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NITT CSE Curriculum Planner</title>
-    <style>
-        :root {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #38bdf8;
-            --accent-hover: #0ea5e9;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --border: #334155;
-        }
-
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1100px;
-            display: grid;
-            grid-template-columns: 1fr 360px;
-            gap: 20px;
-        }
-
-        @media (max-width: 900px) {
-            .container { grid-template-columns: 1fr; }
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        h1, h2 { margin-top: 0; color: var(--accent); }
-        h1 { font-size: 1.5rem; }
-        h2 { font-size: 1.1rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-
-        /* Controls Area */
-        .controls-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        select.sem-selector {
-            background: var(--bg);
-            color: var(--text-main);
-            border: 1px solid var(--accent);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 1rem;
-            cursor: pointer;
-            outline: none;
-        }
-
-        /* Course List Styles */
-        .course-item {
-            display: grid;
-            grid-template-columns: 1fr 80px auto; 
-            gap: 15px;
-            padding: 15px;
-            border-bottom: 1px solid var(--border);
-            align-items: center;
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .course-item:last-child { border-bottom: none; }
-
-        .course-info { display: flex; flex-direction: column; }
-        
-        .course-name-input, .elective-select {
-            background: transparent;
-            border: none;
-            color: var(--text-main);
-            font-weight: 600;
-            font-size: 1rem;
-            width: 100%;
-            padding: 5px 0;
-        }
-        .elective-select {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 5px;
-            color: var(--accent);
-            font-size: 0.9rem;
-            margin-top: 5px;
-        }
-        
-        .course-meta { font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 10px; align-items: center; }
-        .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-        .badge-pc { background: rgba(56, 189, 248, 0.15); color: #38bdf8; } /* Core */
-        .badge-pe { background: rgba(168, 85, 247, 0.15); color: #a855f7; } /* Elective */
-        .badge-elr { background: rgba(34, 197, 94, 0.15); color: #22c55e; } /* Lab */
-        .badge-gir { background: rgba(251, 191, 36, 0.15); color: #fbbf24; } /* General */
-
-        .credits-input {
-            width: 50px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            text-align: center;
-            padding: 5px;
-            border-radius: 4px;
-        }
-
-        /* Grade Chips */
-        .grade-options { display: flex; gap: 5px; }
-        .grade-chip {
-            width: 32px; height: 32px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 6px;
-            font-size: 0.9rem; font-weight: bold;
-            cursor: pointer;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--text-muted);
-            transition: all 0.15s;
-            user-select: none;
-        }
-        .grade-chip:hover { transform: translateY(-2px); }
-        .grade-chip.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 0 10px rgba(56,189,248,0.3); }
-
-        /* Stats Panel */
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-box { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 15px; border-radius: 8px; text-align: center; }
-        .stat-val { font-size: 1.5rem; font-weight: bold; color: var(--text-main); }
-        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 5px; }
-        .highlight-val { color: var(--accent); }
-
-        .calculate-btn {
-            width: 100%; background: var(--success); color: white; border: none; padding: 14px;
-            font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: filter 0.2s;
-        }
-        .calculate-btn:hover { filter: brightness(1.1); }
-        .google-btn { background: #4285F4; margin-bottom: 15px; }
-        .google-btn:hover { background: #3367d6; }
-
-        /* Result List */
-        #results-area { max-height: 500px; overflow-y: auto; padding-right: 5px; }
-        .result-item {
-            background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); padding: 12px;
-            border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .res-gpa { color: var(--accent); font-weight: bold; }
-        .res-grades { font-size: 0.8rem; color: var(--text-muted); }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-    </style>
+    <title>NITT CSE Planner V4</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
+    <div id="toast"></div>
+
     <div class="container">
-        
         <div class="main-panel">
+            <h1>NITT CSE Planner</h1>
+
             <div class="card">
-                <div class="controls-header">
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <h1>NITT CSE Planner</h1>
-                        <select id="semesterSelector" class="sem-selector" onchange="loadSemesterTemplate()">
-                            <option value="3">Semester III</option>
-                            <option value="4">Semester IV</option>
-                            <option value="5">Semester V</option>
-                            <option value="6">Semester VI</option>
-                            <option value="7">Semester VII</option>
-                            <option value="8">Semester VIII</option>
-                        </select>
-                    </div>
-                    <button onclick="resetGrades()" style="background:transparent; border:1px solid var(--border); color:var(--text-muted); padding:6px 12px; border-radius:6px; cursor:pointer;">Reset</button>
+                <div class="sem-tabs">
+                    <button class="sem-tab active" id="tab-3" onclick="window.app.switchTab('3')">Sem III</button>
+                    <button class="sem-tab locked" id="tab-4" onclick="window.app.switchTab('4')">Sem IV</button>
+                    <button class="sem-tab locked" id="tab-5" onclick="window.app.switchTab('5')">Sem V</button>
+                    <button class="sem-tab locked" id="tab-6" onclick="window.app.switchTab('6')">Sem VI</button>
+                    <button class="sem-tab locked" id="tab-7" onclick="window.app.switchTab('7')">Sem VII</button>
+                    <button class="sem-tab locked" id="tab-8" onclick="window.app.switchTab('8')">Sem VIII</button>
                 </div>
 
-                <div class="inputs-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:15px; margin-bottom:15px;">
-                    <div><label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:4px;">Current CGPA</label>
-                    <input type="number" id="currCGPA" style="width:100%; padding:8px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px;" value="9.08" oninput="saveUserData()"></div>
-                    <div><label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:4px;">Credits Done</label>
-                    <input type="number" id="currCredits" style="width:100%; padding:8px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px;" value="40" oninput="saveUserData()"></div>
-                    <div><label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:4px;">Target CGPA</label>
-                    <input type="number" id="targetCGPA" style="width:100%; padding:8px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px;" value="9.0" oninput="saveUserData()"></div>
+                <div class="mode-switch">
+                    <button class="mode-btn active" id="mode-check" onclick="window.app.switchMode('check')">Input Actuals</button>
+                    <button class="mode-btn" id="mode-predict" onclick="window.app.switchMode('predict')">Predict CGPA</button>
+                </div>
+
+                <div class="inputs-grid" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px;">
+                    <div class="input-group">
+                        <label>CGPA (Start)</label>
+                        <input type="number" id="currCGPA" class="main-input" value="8.5" oninput="window.app.updateStartData()">
+                    </div>
+                    <div class="input-group">
+                        <label>Credits (Start)</label>
+                        <input type="number" id="currCredits" class="main-input" value="40" oninput="window.app.updateStartData()">
+                    </div>
+                    <div class="input-group">
+                        <label>Target CGPA</label>
+                        <input type="number" id="targetCGPA" class="main-input" value="9.0">
+                    </div>
                 </div>
             </div>
 
             <div class="card">
-                <h2 id="semTitle">Course List</h2>
+                <h2 id="semTitle">Semester III Courses</h2>
                 <div id="course-list">
                     </div>
-                <div style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border); text-align:center;">
-                    <button onclick="addCustomCourse()" style="background:var(--card-bg); border:1px dashed var(--accent); color:var(--accent); padding:8px 20px; border-radius:6px; cursor:pointer;">+ Add Custom Subject</button>
-                </div>
+                <button class="add-btn" onclick="window.app.addCustomCourse()">+ Add Subject</button>
             </div>
         </div>
 
         <div class="side-panel">
             <div class="card" id="auth-section">
-                <button class="calculate-btn google-btn" onclick="login()">Sync with Google</button>
+                <button class="calculate-btn google-btn" onclick="window.app.login()">Sync Data</button>
             </div>
 
-            <div class="card">
+            <div id="panel-check" class="card">
+                <h2>Current Stats</h2>
+                <div style="text-align:center; margin-bottom:15px;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Semester GPA</div>
+                    <div style="font-size:1.75rem; font-weight:800; color:var(--text-main); margin:5px 0;" id="live-sgpa">0.00</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-top:15px;">New Cumulative</div>
+                    <div style="font-size:1.75rem; font-weight:800; color:var(--success);" id="live-cgpa">0.00</div>
+                </div>
+                <button class="calculate-btn save-btn" onclick="window.app.saveAndUnlock()">Save & Unlock Next Sem</button>
+            </div>
+
+            <div id="panel-predict" class="card" style="display:none;">
                 <h2>Analysis</h2>
-                <div class="stat-grid">
-                    <div class="stat-box">
-                        <div class="stat-val highlight-val" id="points-needed">--</div>
-                        <div class="stat-label">Points Needed</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-val" id="sem-credits">--</div>
-                        <div class="stat-label">Sem Credits</div>
-                    </div>
+                <div style="text-align:center; margin-bottom:15px;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Points Needed</div>
+                    <div style="font-size:1.75rem; font-weight:800; color:var(--text-main); margin-top:5px;" id="points-needed">--</div>
                 </div>
-                <button class="calculate-btn" onclick="calculate()">Calculate Paths</button>
-            </div>
-
-            <div class="card">
-                <h2>Scenarios (Top 30)</h2>
-                <div id="results-area">
-                    <div style="text-align:center; color:var(--text-muted); padding:20px;">
-                        Select grades above & click Calculate.
-                    </div>
-                </div>
+                <button class="calculate-btn" onclick="window.app.calculateWorstCase()">Calculate Lowest Path</button>
+                <div id="prediction-result" style="margin-top:20px;"></div>
             </div>
         </div>
     </div>
 
-    <script>
-        // --- 1. Syllabus Data ---
-        const PE_COURSES = [
-            "Combinatorics and Graph Theory", "Software Engineering", "Design Thinking", 
-            "Advanced Data Structures & Algorithms", "Multimedia Systems", "Real Time Systems", 
-            "Cloud Computing", "Parallel Algorithms", "GPU Computing", "Internet of Things", 
-            "Quantum Computing", "Cyber Physical Systems", "Network Security", "Wireless Networks", 
-            "Advanced Cryptography", "Blockchain & Metaverse", "Image Processing", "Machine Learning", 
-            "Deep Learning", "NLP", "Generative AI", "Game Theory", "Software Testing", 
-            "Agile Development", "Web Technology", "Full Stack Dev", "DevOps", "Data Analytics", 
-            "Data Science", "Social Network Analysis"
-        ];
-
-        const OE_COURSES = [
-            "Big Data Analytics", "Cloud & Grid Computing", "Computer Graphics", 
-            "Distributed Architecture", "Human Computer Interaction", "Marketing Management", 
-            "Financial Management", "Entrepreneurship", "Supply Chain Management"
-        ];
-
-        const SEMESTER_TEMPLATES = {
-            "3": [
-                {code:"MAIR31", name:"Maths III / Prob & OR", cr:4, type:"GIR"},
-                {code:"CSPC31", name:"Principles of Prog Languages", cr:4, type:"PC"},
-                {code:"CSPC32", name:"Data Structures", cr:3, type:"PC"},
-                {code:"CSPC33", name:"Digital Systems Design", cr:3, type:"PC"},
-                {code:"CSPC34", name:"Computer Organization", cr:3, type:"PC"},
-                {code:"PE-I", name:"Programme Elective - I", cr:3, type:"PE", options: PE_COURSES},
-                {code:"CSLR31", name:"Data Structures Lab", cr:2, type:"ELR"},
-                {code:"CSLR32", name:"Digital Lab", cr:2, type:"ELR"}
-            ],
-            "4": [
-                {code:"CSIR14", name:"Professional Ethics", cr:3, type:"GIR"},
-                {code:"CSPC41", name:"Formal Lang & Automata", cr:4, type:"PC"},
-                {code:"CSPC42", name:"Design & Analysis of Algo", cr:3, type:"PC"},
-                {code:"CSPC43", name:"Operating Systems", cr:3, type:"PC"},
-                {code:"PE-II", name:"Programme Elective - II", cr:3, type:"PE", options: PE_COURSES},
-                {code:"PE-III", name:"Prog Elective III / Open Elec I", cr:3, type:"PE/OE", options: [...PE_COURSES, ...OE_COURSES]},
-                {code:"CSLR41", name:"Algorithms Lab", cr:2, type:"ELR"},
-                {code:"CSLR42", name:"OS Lab", cr:2, type:"ELR"}
-            ],
-            "5": [
-                {code:"HSIR13", name:"Industrial Economics", cr:3, type:"GIR"},
-                {code:"CSPC51", name:"Computer Architecture", cr:4, type:"PC"},
-                {code:"CSPC52", name:"DBMS", cr:3, type:"PC"},
-                {code:"CSPC53", name:"Computer Networks", cr:3, type:"PC"},
-                {code:"CSPC54", name:"Intro to AI & ML", cr:4, type:"PC"},
-                {code:"PE-IV", name:"Prog Elec IV / Open Elec II", cr:3, type:"PE/OE", options: [...PE_COURSES, ...OE_COURSES]},
-                {code:"CSLR51", name:"DBMS Lab", cr:2, type:"ELR"},
-                {code:"CSLR52", name:"Networks Lab", cr:2, type:"ELR"}
-            ],
-            "6": [
-                {code:"CSIR19", name:"Industrial Lecture", cr:1, type:"GIR"},
-                {code:"CSPC61", name:"Embedded Systems Arch", cr:3, type:"PC"},
-                {code:"CSPC62", name:"Compiler Design", cr:4, type:"PC"},
-                {code:"CSPC63", name:"Principles of Cryptography", cr:4, type:"PC"},
-                {code:"PE-V", name:"Programme Elective - V", cr:3, type:"PE", options: PE_COURSES},
-                {code:"PE-VI", name:"Programme Elective - VI", cr:3, type:"PE", options: PE_COURSES},
-                {code:"PE-VII", name:"Prog Elec VII / Open Elec III", cr:3, type:"PE/OE", options: [...PE_COURSES, ...OE_COURSES]},
-                {code:"CSLR61", name:"Embedded Systems Lab", cr:2, type:"ELR"},
-                {code:"CSLR62", name:"App Development Lab", cr:2, type:"ELR"}
-            ],
-            "7": [
-                {code:"CSIR16", name:"Summer Internship", cr:2, type:"GIR"},
-                {code:"CSIR18", name:"Comprehensive Viva", cr:1, type:"GIR"},
-                {code:"PE-VIII", name:"Programme Elective - VIII", cr:3, type:"PE", options: PE_COURSES},
-                {code:"PE-IX", name:"Programme Elective - IX", cr:3, type:"PE", options: PE_COURSES},
-                {code:"PE-X", name:"Prog Elec X / Open Elec IV", cr:3, type:"PE/OE", options: [...PE_COURSES, ...OE_COURSES]},
-                {code:"PE-XI", name:"Prog Elec XI / Open Elec V", cr:3, type:"PE/OE", options: [...PE_COURSES, ...OE_COURSES]}
-            ],
-            "8": [
-                {code:"PE-XII", name:"Prog Elec XII / Open Elec VI", cr:3, type:"PE/OE", options: [...PE_COURSES, ...OE_COURSES]},
-                {code:"CSIR17", name:"Project Work", cr:6, type:"GIR"}
-            ]
-        };
-
-        const GRADES = { 'S': 10, 'A': 9, 'B': 8, 'C': 7, 'D': 6, 'E': 5, 'F': 0 };
-        let activeCourses = []; 
-        let userConstraints = {}; // Stores selected grades per course ID
-
-        // --- 2. Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
-            loadUserData(); // Load CGPA info
-            loadSemesterTemplate(); // Load Default Sem 3
-        });
-
-        // --- 3. Semester Management ---
-        window.loadSemesterTemplate = function() {
-            const sem = document.getElementById('semesterSelector').value;
-            document.getElementById('semTitle').innerText = "Semester " + sem + " Courses";
-            
-            // Check if we have saved data for this semester in LocalStorage
-            const savedCourses = localStorage.getItem('nitt_sem_' + sem);
-            
-            if (savedCourses) {
-                activeCourses = JSON.parse(savedCourses);
-            } else {
-                // Load from Template
-                const template = SEMESTER_TEMPLATES[sem];
-                // Deep copy to avoid reference issues
-                activeCourses = template.map((c, index) => ({
-                    id: sem + "_" + index + "_" + Date.now(),
-                    name: c.name,
-                    credits: c.credits,
-                    type: c.type,
-                    options: c.options || null,
-                    selectedOption: "" // For electives
-                }));
-            }
-
-            // Load constraints (grades)
-            const savedConstraints = localStorage.getItem('nitt_constraints_' + sem);
-            userConstraints = savedConstraints ? JSON.parse(savedConstraints) : {};
-
-            renderCourses();
-        };
-
-        function renderCourses() {
-            const list = document.getElementById('course-list');
-            list.innerHTML = "";
-            let totalCredits = 0;
-
-            activeCourses.forEach(course => {
-                totalCredits += course.credits;
-                
-                // Ensure constraint exists
-                if (!userConstraints[course.id]) {
-                    userConstraints[course.id] = ['S', 'A', 'B', 'C', 'D'];
-                }
-
-                const div = document.createElement('div');
-                div.className = 'course-item';
-
-                // 1. Info Column
-                let infoHtml = `<div class="course-info">`;
-                
-                // If it has options (Elective), show dropdown
-                if (course.options) {
-                    infoHtml += `<span class="badge badge-pe" style="width:fit-content; margin-bottom:4px;">${course.type}</span>`;
-                    infoHtml += `<select class="elective-select" onchange="updateElectiveName('${course.id}', this.value)">`;
-                    infoHtml += `<option value="" disabled ${!course.selectedOption ? 'selected' : ''}>-- Select Subject --</option>`;
-                    course.options.forEach(opt => {
-                        const selected = course.selectedOption === opt ? 'selected' : '';
-                        infoHtml += `<option value="${opt}" ${selected}>${opt}</option>`;
-                    });
-                    infoHtml += `</select>`;
-                } else {
-                    // Fixed Core Course
-                    let badgeClass = 'badge-gir';
-                    if(course.type === 'PC') badgeClass = 'badge-pc';
-                    if(course.type === 'ELR') badgeClass = 'badge-elr';
-                    infoHtml += `<div class="course-meta"><span class="badge ${badgeClass}">${course.type}</span></div>`;
-                    infoHtml += `<input type="text" class="course-name-input" value="${course.name}" onchange="updateCourseName('${course.id}', this.value)">`;
-                }
-                infoHtml += `</div>`;
-
-                // 2. Credits Column
-                const creditHtml = `
-                    <div style="text-align:center;">
-                        <label style="font-size:0.7rem; color:#64748b;">CREDITS</label>
-                        <input type="number" class="credits-input" value="${course.credits}" onchange="updateCredits('${course.id}', this.value)">
-                    </div>
-                `;
-
-                // 3. Grades Column
-                let gradeHtml = `<div class="grade-options">`;
-                Object.keys(GRADES).forEach(g => {
-                    if (g === 'E' || g === 'F') return; // Skip low grades to save space/complexity usually
-                    const active = userConstraints[course.id].includes(g) ? 'active' : '';
-                    gradeHtml += `<div class="grade-chip ${active}" onclick="toggleGrade('${course.id}', '${g}')">${g}</div>`;
-                });
-                gradeHtml += `</div>`;
-
-                div.innerHTML = infoHtml + creditHtml + gradeHtml;
-                list.appendChild(div);
-            });
-
-            document.getElementById('sem-credits').innerText = totalCredits;
-            saveCurrentSemData();
-        }
-
-        // --- 4. Course Actions ---
-        window.updateElectiveName = function(id, value) {
-            const course = activeCourses.find(c => c.id === id);
-            if(course) course.selectedOption = value;
-            saveCurrentSemData();
-        };
-
-        window.updateCourseName = function(id, value) {
-            const course = activeCourses.find(c => c.id === id);
-            if(course) course.name = value;
-            saveCurrentSemData();
-        };
-
-        window.updateCredits = function(id, value) {
-            const course = activeCourses.find(c => c.id === id);
-            if(course) course.credits = parseFloat(value) || 0;
-            renderCourses(); // Re-render to update total
-        };
-
-        window.toggleGrade = function(id, grade) {
-            const arr = userConstraints[id];
-            const idx = arr.indexOf(grade);
-            if(idx > -1) arr.splice(idx, 1);
-            else arr.push(grade);
-            
-            renderCourses(); // Re-render to show active state
-        };
-
-        window.addCustomCourse = function() {
-            const sem = document.getElementById('semesterSelector').value;
-            activeCourses.push({
-                id: sem + "_custom_" + Date.now(),
-                name: "New Course",
-                credits: 3,
-                type: "Extra",
-                options: null
-            });
-            renderCourses();
-        };
-
-        window.resetGrades = function() {
-            activeCourses.forEach(c => {
-                userConstraints[c.id] = ['S', 'A', 'B', 'C', 'D'];
-            });
-            renderCourses();
-        };
-
-        // --- 5. Data Persistence ---
-        function saveCurrentSemData() {
-            const sem = document.getElementById('semesterSelector').value;
-            localStorage.setItem('nitt_sem_' + sem, JSON.stringify(activeCourses));
-            localStorage.setItem('nitt_constraints_' + sem, JSON.stringify(userConstraints));
-        }
-
-        window.saveUserData = function() {
-            localStorage.setItem('nitt_cgpa', document.getElementById('currCGPA').value);
-            localStorage.setItem('nitt_credits', document.getElementById('currCredits').value);
-            localStorage.setItem('nitt_target', document.getElementById('targetCGPA').value);
-        };
-
-        function loadUserData() {
-            if(localStorage.getItem('nitt_cgpa')) document.getElementById('currCGPA').value = localStorage.getItem('nitt_cgpa');
-            if(localStorage.getItem('nitt_credits')) document.getElementById('currCredits').value = localStorage.getItem('nitt_credits');
-            if(localStorage.getItem('nitt_target')) document.getElementById('targetCGPA').value = localStorage.getItem('nitt_target');
-        }
-
-        // --- 6. Calculation Logic ---
-        window.calculate = function() {
-            const currCGPA = parseFloat(document.getElementById('currCGPA').value);
-            const currCredits = parseFloat(document.getElementById('currCredits').value);
-            const targetCGPA = parseFloat(document.getElementById('targetCGPA').value);
-
-            let semCredits = activeCourses.reduce((acc, c) => acc + c.credits, 0);
-            let totalCredits = currCredits + semCredits;
-            
-            // Formula: (CurrentPts + NewPts) / TotalCredits = Target
-            let requiredTotalPoints = targetCGPA * totalCredits;
-            let currentPoints = currCGPA * currCredits;
-            let targetSemPoints = requiredTotalPoints - currentPoints;
-
-            document.getElementById('points-needed').innerText = targetSemPoints.toFixed(2);
-
-            // Solver
-            const results = [];
-            let count = 0;
-            const MAX_RESULTS = 30;
-
-            function solve(index, currentPointsAccumulated, history) {
-                if (count >= MAX_RESULTS) return;
-
-                if (index === activeCourses.length) {
-                    if (currentPointsAccumulated >= targetSemPoints - 0.5) { // Small buffer for rounding
-                        results.push({ points: currentPointsAccumulated, history: [...history] });
-                        count++;
-                    }
-                    return;
-                }
-
-                const course = activeCourses[index];
-                const allowed = userConstraints[course.id];
-                
-                if (!allowed || allowed.length === 0) return;
-
-                // Optimization: Try lowest sufficient grades first? Or strict order.
-                // Let's stick to standard order.
-                for (let g of allowed) {
-                    let p = GRADES[g];
-                    solve(index + 1, currentPointsAccumulated + (p * course.credits), [...history, {name: (course.selectedOption || course.name), grade: g}]);
-                    if (count >= MAX_RESULTS) return;
-                }
-            }
-
-            solve(0, 0, []);
-            renderResults(results, semCredits, currCGPA, currCredits);
-        };
-
-        function renderResults(results, semCredits, currCGPA, currCredits) {
-            const area = document.getElementById('results-area');
-            area.innerHTML = "";
-
-            if (results.length === 0) {
-                area.innerHTML = "<div style='padding:20px; color:var(--danger); text-align:center'>Impossible to reach target with selected grades.<br>Try increasing allowed grades or lowering target.</div>";
-                return;
-            }
-
-            // Sort by lowest points (easiest path)
-            results.sort((a, b) => a.points - b.points);
-
-            results.forEach((res, i) => {
-                const semGPA = (res.points / semCredits).toFixed(2);
-                const finalCGPA = ((currCGPA * currCredits + res.points) / (currCredits + semCredits)).toFixed(2);
-
-                let html = `<div class="result-item">
-                    <div>
-                        <div style="font-weight:bold; color:white; margin-bottom:4px;">Option ${i+1}</div>
-                        <div class="res-grades">`;
-                
-                res.history.forEach(h => {
-                    // Abbreviate name
-                    let shortName = h.name.length > 15 ? h.name.substring(0,12)+"..." : h.name;
-                    html += `<span>${shortName}: <b style="color:${getGradeColor(h.grade)}">${h.grade}</b></span> &nbsp; `;
-                });
-
-                html += `</div></div>
-                    <div style="text-align:right;">
-                        <div style="font-size:0.75rem; color:#94a3b8;">SGPA</div>
-                        <div class="res-gpa">${semGPA}</div>
-                        <div style="font-size:0.75rem; color:#94a3b8; margin-top:4px;">CGPA</div>
-                        <div style="color:#22c55e; font-weight:bold;">${finalCGPA}</div>
-                    </div>
-                </div>`;
-                area.innerHTML += html;
-            });
-        }
-
-        function getGradeColor(g) {
-            if(g === 'S') return '#fbbf24';
-            if(g === 'A') return '#a3e635';
-            if(g === 'B') return '#38bdf8';
-            return '#94a3b8';
-        }
-    </script>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        // ===============================================================
-        // FIREBASE CONFIG
-        // ===============================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyCh3Wi_RRz71TjF0N6VS8b8pfxY63GSOyo",
-            authDomain: "nitt-cgpa.firebaseapp.com",
-            projectId: "nitt-cgpa",
-            storageBucket: "nitt-cgpa.firebasestorage.app",
-            messagingSenderId: "207174838364",
-            appId: "1:207174838364:web:1a80f949b60678d2429e99",
-            measurementId: "G-PHKHPVBY7F"
-        };
-        // ===============================================================
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
-        let currentUser = null;
-
-        window.login = async function() {
-            try { await signInWithPopup(auth, provider); } 
-            catch (error) { alert("Login failed: " + error.message); }
-        }
-
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            const btn = document.querySelector('.google-btn');
-            if(user) {
-                btn.innerText = `Saved as ${user.displayName}`;
-                btn.style.background = "#22c55e";
-            } else {
-                btn.innerText = "Sync with Google";
-                btn.style.background = "#4285F4";
-            }
-        });
-    </script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
