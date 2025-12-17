@@ -1,6 +1,5 @@
-import { state, saveSemesterConfig } from './store.js';
+import { state } from './store.js'; // REMOVED saveSemesterConfig import
 import { GRADES, PREDICT_FULL, CHECK_KEYS, PE_POOL_GEN, OE_POOL_GEN, CSPE_POOL_SEM3_4 } from './data.js';
-import { calculateLiveStats } from './calc.js';
 
 export function showToast(msg) {
     const t = document.getElementById("toast");
@@ -8,6 +7,7 @@ export function showToast(msg) {
     setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
 }
 
+// ... renderTabState remains same ...
 export function renderTabState() {
     for(let i=4; i<=8; i++) {
         const btn = document.getElementById(`tab-${i}`);
@@ -24,7 +24,7 @@ export function renderCourses() {
         const div = document.createElement('div');
         div.className = 'course-item';
 
-        // 1. BADGE COLUMN (Fixed 85px)
+        // 1. BADGE COLUMN
         let badgeHtml = `<div>`;
         if (c.type === "PE/OE") {
             const isOE = c.currentType === "OE";
@@ -34,7 +34,7 @@ export function renderCourses() {
         }
         badgeHtml += `</div>`;
 
-        // 2. NAME COLUMN (Flex 1fr)
+        // 2. NAME COLUMN
         let nameHtml = `<div>`;
         if(c.type === "Extra") {
             nameHtml += `<input type="text" class="course-name-edit" value="${c.name}" onchange="window.app.updateCustomName('${c.id}', this.value)" placeholder="Course Name">`;
@@ -45,7 +45,7 @@ export function renderCourses() {
         }
         nameHtml += `</div>`;
 
-        // 3. CREDITS COLUMN (Fixed 60px)
+        // 3. CREDITS COLUMN
         let crHtml = `<div>`;
         if(c.type === "Extra") {
              crHtml += `<input type="number" class="credits-edit" value="${c.cr}" onchange="window.app.updateCustomCredits('${c.id}', this.value)">`;
@@ -54,7 +54,7 @@ export function renderCourses() {
         }
         crHtml += `</div>`;
 
-        // 4. GRADE COLUMN (Fixed 160px)
+        // 4. GRADE COLUMN
         let gradeHtml = `<div>`;
         if (state.mode === 'check') {
             const val = state.actualGrades[c.id] || "";
@@ -72,19 +72,18 @@ export function renderCourses() {
         }
         gradeHtml += `</div>`;
 
-        // 5. ACTION COLUMN (Fixed 40px)
+        // 5. ACTION COLUMN
         let actionHtml = `<div>`;
         if(c.type === "Extra") {
             actionHtml += `<button class="delete-course-btn" onclick="window.app.deleteCustomCourse('${c.id}')">&times;</button>`;
         }
         actionHtml += `</div>`;
 
-        // Assemble 5 distinct grid children
         div.innerHTML = badgeHtml + nameHtml + crHtml + gradeHtml + actionHtml;
         list.appendChild(div);
     });
     
-    saveSemesterConfig();
+    // REMOVED: saveSemesterConfig(); <-- THIS WAS CAUSING DATA LOSS
 }
 
 export function handleToggleCourseType(id) {
@@ -102,4 +101,5 @@ export function handleToggleCourseType(id) {
         course.name = peTitle;
     }
     renderCourses();
+    import('./store.js').then(mod => mod.saveSemesterConfig());
 }

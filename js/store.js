@@ -29,7 +29,6 @@ export function saveHistory() {
     syncToCloud(); 
 }
 
-// FIX: Save EVERYTHING (Courses + Grades + Constraints)
 export function saveSemesterConfig() {
     const dataToSave = {
         courses: state.activeCourses,
@@ -37,18 +36,19 @@ export function saveSemesterConfig() {
         constraints: state.userConstraints
     };
     localStorage.setItem('nitt_sem_data_' + state.currentSem, JSON.stringify(dataToSave));
+    syncToCloud(); // Auto-sync when grades change
 }
 
 export function loadSemesterConfig(sem) {
     return localStorage.getItem('nitt_sem_data_' + sem);
 }
 
-// --- CLOUD SYNC ---
+// --- CLOUD SYNC (NOW SAVES EVERYTHING) ---
 
-// 1. PULL: Get data from Cloud (Call this on Login)
+// 1. PULL: Get ALL data from Cloud
 export async function syncFromCloud() {
     const user = auth.currentUser;
-    if (!user) return;
+    if (!user) return false;
 
     try {
         const docRef = doc(db, "users", user.uid);
@@ -56,12 +56,27 @@ export async function syncFromCloud() {
 
         if (docSnap.exists()) {
             const data = docSnap.data();
+            
+            // 1. Restore History
             if (data.academicHistory) {
                 state.academicHistory = data.academicHistory;
                 localStorage.setItem('nitt_v11_history', JSON.stringify(state.academicHistory));
-                console.log("Data synced from cloud!");
-                return true; 
             }
+
+            // 2. Restore Current Semester Data if available
+            const semKey = 'sem_' + state.currentSem;
+            if (data[semKey]) {
+                const semData = data[semKey];
+                state.activeCourses = semData.courses || [];
+                state.actualGrades = semData.grades || {};
+                state.userConstraints = semData.constraints || {};
+                
+                // Update Local Storage
+                localStorage.setItem('nitt_sem_data_' + state.currentSem, JSON.stringify(semData));
+            }
+
+            console.log("Full data synced from cloud!");
+            return true; 
         }
     } catch (e) {
         console.error("Error pulling from cloud: ", e);
@@ -69,16 +84,26 @@ export async function syncFromCloud() {
     return false;
 }
 
-// 2. PUSH: Save data to Cloud (Call this on Save)
+// 2. PUSH: Save ALL data to Cloud
 export async function syncToCloud() {
     const user = auth.currentUser;
     if (!user) return;
 
     try {
-        await setDoc(doc(db, "users", user.uid), {
+        // Prepare the payload
+        const payload = {
             academicHistory: state.academicHistory,
             lastUpdated: new Date()
-        }, { merge: true });
+        };
+
+        // Add the current semester's data to the payload
+        payload['sem_' + state.currentSem] = {
+            courses: state.activeCourses,
+            grades: state.actualGrades,
+            constraints: state.userConstraints
+        };
+
+        await setDoc(doc(db, "users", user.uid), payload, { merge: true });
         console.log("Data saved to cloud!");
     } catch (e) {
         console.error("Error saving to cloud: ", e);

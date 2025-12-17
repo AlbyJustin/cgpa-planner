@@ -4,23 +4,18 @@ import { renderCourses, renderTabState, showToast, handleToggleCourseType } from
 import { calculateLiveStats, solveWorstCase } from './calc.js';
 import { login, auth, onAuthStateChanged } from './auth.js';
 
-// --- MAIN LOGIC ---
-
 function loadSemester(sem) {
     state.currentSem = sem;
     document.getElementById('semTitle').innerText = `Semester ${sem} Courses`;
     
-    // Disable inputs check
     const disableStart = (sem !== "3");
     document.getElementById('currCGPA').disabled = disableStart;
     document.getElementById('currCredits').disabled = disableStart;
 
-    // LOAD DATA (Bundle)
     const savedJSON = loadSemesterConfig(sem);
     
     if (savedJSON) {
         const data = JSON.parse(savedJSON);
-        // Handle potential old format vs new bundle format
         if (Array.isArray(data)) {
             state.activeCourses = data;
             state.actualGrades = {};
@@ -31,13 +26,11 @@ function loadSemester(sem) {
             state.userConstraints = data.constraints || {};
         }
     } else {
-        // Load Template
         state.activeCourses = JSON.parse(JSON.stringify(TEMPLATES[sem]));
         state.actualGrades = {};
         state.userConstraints = {};
     }
 
-    // Ensure defaults
     state.activeCourses.forEach(c => {
         if(!state.userConstraints[c.id]) state.userConstraints[c.id] = [...PREDICT_DEFAULT];
         if(state.actualGrades[c.id] === undefined) state.actualGrades[c.id] = "";
@@ -45,7 +38,6 @@ function loadSemester(sem) {
 
     renderCourses();
     
-    // Recalculate stats immediately on load
     if (state.mode === 'check') {
         calculateLiveStats();
     }
@@ -75,7 +67,6 @@ function switchMode(newMode) {
     document.getElementById('panel-check').style.display = newMode === 'check' ? 'block' : 'none';
     document.getElementById('panel-predict').style.display = newMode === 'predict' ? 'block' : 'none';
     renderCourses();
-    // Recalc on mode switch
     if(newMode === 'check') calculateLiveStats();
 }
 
@@ -83,14 +74,10 @@ function switchMode(newMode) {
 
 function updateActual(id, val) {
     state.actualGrades[id] = val;
-    // Remove error styling
     const el = document.getElementById(`grade-${id}`);
     if(el) el.classList.remove('error');
-    
-    // 1. Calculate Stats
     calculateLiveStats();
-    // 2. FIX: SAVE IMMEDIATELY
-    saveSemesterConfig();
+    saveSemesterConfig(); // Explicit Save
 }
 
 function toggleConstraint(id, grade) {
@@ -99,8 +86,7 @@ function toggleConstraint(id, grade) {
     if (idx > -1) arr.splice(idx, 1);
     else arr.push(grade);
     renderCourses(); 
-    // Render calls save, but we can be explicit:
-    saveSemesterConfig();
+    saveSemesterConfig(); // Explicit Save
 }
 
 function addCustomCourse() {
@@ -108,26 +94,28 @@ function addCustomCourse() {
     state.activeCourses.push({id: newId, name: "New Course", cr: 3, type: "Extra"});
     state.userConstraints[newId] = [...PREDICT_DEFAULT];
     state.actualGrades[newId] = "";
-    renderCourses(); // render calls save
+    renderCourses(); 
+    saveSemesterConfig(); // Explicit Save
 }
 
 function deleteCustomCourse(id) {
     state.activeCourses = state.activeCourses.filter(c => c.id !== id);
     delete state.userConstraints[id];
     delete state.actualGrades[id];
-    renderCourses(); // render calls save
+    renderCourses(); 
+    saveSemesterConfig(); // Explicit Save
 }
 
 function updateCustomName(id, val) {
     const c = state.activeCourses.find(x => x.id === id);
     if(c) c.name = val;
-    saveSemesterConfig(); // FIX: Save name change
+    saveSemesterConfig(); // Explicit Save
 }
 
 function updateCustomCredits(id, val) {
     const c = state.activeCourses.find(x => x.id === id);
     if(c) c.cr = parseFloat(val) || 0;
-    saveSemesterConfig(); // FIX: Save credits change
+    saveSemesterConfig(); // Explicit Save
     if(state.mode === 'check') calculateLiveStats();
 }
 
@@ -159,7 +147,7 @@ function saveAndUnlock() {
     let semCredits = state.activeCourses.reduce((sum, c) => sum + c.cr, 0);
     
     state.academicHistory[state.currentSem] = { completed: true, cgpa: currentLiveCGPA, credits: prevHist.credits + semCredits };
-    saveHistory(); // Saves to local + Cloud
+    saveHistory(); 
     renderTabState();
     showToast(`Semester ${state.currentSem} Saved Successfully!`);
 }
@@ -215,35 +203,30 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTabState();
     loadSemester("3");
 
-    // FIX: Auth Listener to update Button Text
+    // AUTH LISTENER
     onAuthStateChanged(auth, async (user) => {
-        console.log("Auth State Changed:", user); // Debug Log
+        console.log("Auth State:", user); 
         if (user) {
             const btn = document.querySelector('.google-btn');
+            // Ensure button exists before trying to change text
             if(btn) {
-                // Gets "Alby" from "Alby Surname"
                 const name = user.displayName ? user.displayName.split(' ')[0] : 'User';
                 btn.innerText = `Synced: ${name}`;
-                btn.style.background = "#22c55e"; // Optional: turn green on sync
+                btn.style.background = "#22c55e"; 
             }
             
-            // Auto-Sync
+            // Sync Data
             const updated = await syncFromCloud();
             if (updated) {
+                // Refresh UI if data came from cloud
+                loadSemester(state.currentSem); 
                 renderTabState();
-                // Update inputs if we just pulled new history
-                const hist = state.academicHistory["2"];
-                if(state.currentSem === "3" && hist) {
-                   document.getElementById('currCGPA').value = hist.cgpa;
-                   document.getElementById('currCredits').value = hist.credits;
-                }
                 showToast("Data synced from Cloud!");
             }
         }
     });
 });
 
-// --- EXPOSE TO WINDOW ---
 window.app = {
     switchTab,
     switchMode,
