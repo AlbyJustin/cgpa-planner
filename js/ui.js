@@ -39,7 +39,18 @@ export function renderCourses() {
         if(c.type === "Extra") {
             nameHtml += `<input type="text" class="course-name-edit" value="${c.name}" onchange="window.app.updateCustomName('${c.id}', this.value)" placeholder="Course Name">`;
         } else if (c.opts) {
-            nameHtml += `<select class="elective-select"><option>${c.name} (Select)</option>${c.opts.map(o => `<option>${o}</option>`).join('')}</select>`;
+            // ELECTIVE DROPDOWN LOGIC
+            nameHtml += `<select class="elective-select" onchange="window.app.updateElectiveChoice('${c.id}', this.value)">`;
+            if (!c.opts.includes(c.name)) {
+                nameHtml += `<option value="" disabled selected>${c.name} (Select)</option>`;
+            }
+
+            c.opts.forEach(opt => {
+                const isSel = (opt === c.name) ? 'selected' : '';
+                nameHtml += `<option value="${opt}" ${isSel}>${opt}</option>`;
+            });
+            
+            nameHtml += `</select>`;
         } else {
             nameHtml += `<div class="course-name-fixed">${c.name}</div>`;
         }

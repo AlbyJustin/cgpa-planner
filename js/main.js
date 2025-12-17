@@ -130,6 +130,15 @@ function updateStartData() {
     }
 }
 
+function updateElectiveChoice(id, val) {
+    const c = state.activeCourses.find(x => x.id === id);
+    if(c) {
+        c.name = val;
+        saveSemesterConfig();
+        renderCourses();
+    }
+}
+
 function saveAndUnlock() {
     let missing = false;
     state.activeCourses.forEach(c => {
@@ -238,6 +247,7 @@ window.app = {
     updateCustomName,
     updateCustomCredits,
     updateStartData,
+    updateElectiveChoice,
     saveAndUnlock,
     calculateWorstCase,
     login
