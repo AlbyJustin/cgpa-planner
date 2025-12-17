@@ -31,11 +31,11 @@ export function saveHistory() {
 }
 
 export function saveSemesterConfig() {
-    sessionStorage.setItem('nitt_sem_config_'+state.currentSem, JSON.stringify(state.activeCourses));
+    localStorage.setItem('nitt_sem_config_'+state.currentSem, JSON.stringify(state.activeCourses));
 }
 
 export function loadSemesterConfig(sem) {
-    return sessionStorage.getItem('nitt_sem_config_'+sem);
+    return localStorage.getItem('nitt_sem_config_'+sem);
 }
 
 // --- CLOUD SYNC ---

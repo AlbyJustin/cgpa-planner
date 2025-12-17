@@ -167,6 +167,16 @@ function calculateWorstCase() {
 // --- INIT ---
 document.addEventListener('DOMContentLoaded', () => {
     loadHistory();
+
+    const startHistory = state.academicHistory["2"];
+    if (startHistory) {
+        const cgpaInput = document.getElementById('currCGPA');
+        const creditsInput = document.getElementById('currCredits');
+        
+        if (cgpaInput) cgpaInput.value = startHistory.cgpa;
+        if (creditsInput) creditsInput.value = startHistory.credits;
+    }
+    
     renderTabState();
     loadSemester("3");
 
