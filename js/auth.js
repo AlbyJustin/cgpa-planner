@@ -28,3 +28,6 @@ export async function login() {
 // Export db and auth for other files to use
 export { auth, db, onAuthStateChanged };
 
+onAuthStateChanged(auth, (user) => {
+    if(user) document.querySelector('.google-btn').innerText = `Synced: ${user.displayName.split(' ')[0]}`;
+});

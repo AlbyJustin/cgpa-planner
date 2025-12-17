@@ -1,11 +1,10 @@
-import { state, loadHistory, saveHistory, loadSemesterConfig, syncFromCloud } from './store.js';
-import { onAuthStateChanged } from './auth.js';
+import { state, loadHistory, saveHistory, saveSemesterConfig, loadSemesterConfig, syncFromCloud } from './store.js';
 import { TEMPLATES, PREDICT_DEFAULT } from './data.js';
 import { renderCourses, renderTabState, showToast, handleToggleCourseType } from './ui.js';
 import { calculateLiveStats, solveWorstCase } from './calc.js';
-import { login } from './auth.js';
+import { login, auth, onAuthStateChanged } from './auth.js';
 
-// --- MAIN LOGIC FUNCTIONS ---
+// --- MAIN LOGIC ---
 
 function loadSemester(sem) {
     state.currentSem = sem;
@@ -16,32 +15,29 @@ function loadSemester(sem) {
     document.getElementById('currCGPA').disabled = disableStart;
     document.getElementById('currCredits').disabled = disableStart;
 
-    // LOAD DATA
+    // LOAD DATA (Bundle)
     const savedJSON = loadSemesterConfig(sem);
     
     if (savedJSON) {
-        // If we have saved data, parse the bundle
         const data = JSON.parse(savedJSON);
-        
-        // Handle legacy data (if user only had course list saved previously)
+        // Handle potential old format vs new bundle format
         if (Array.isArray(data)) {
-            state.activeCourses = data; 
+            state.activeCourses = data;
             state.actualGrades = {};
             state.userConstraints = {};
         } else {
-            // New format (Bundle)
             state.activeCourses = data.courses || [];
             state.actualGrades = data.grades || {};
             state.userConstraints = data.constraints || {};
         }
     } else {
-        // Load Template if no save exists
+        // Load Template
         state.activeCourses = JSON.parse(JSON.stringify(TEMPLATES[sem]));
         state.actualGrades = {};
         state.userConstraints = {};
     }
 
-    // Ensure defaults exist for any missing constraints
+    // Ensure defaults
     state.activeCourses.forEach(c => {
         if(!state.userConstraints[c.id]) state.userConstraints[c.id] = [...PREDICT_DEFAULT];
         if(state.actualGrades[c.id] === undefined) state.actualGrades[c.id] = "";
@@ -49,7 +45,7 @@ function loadSemester(sem) {
 
     renderCourses();
     
-    // Recalculate stats immediately to show the SGPA/CGPA
+    // Recalculate stats immediately on load
     if (state.mode === 'check') {
         calculateLiveStats();
     }
@@ -79,13 +75,22 @@ function switchMode(newMode) {
     document.getElementById('panel-check').style.display = newMode === 'check' ? 'block' : 'none';
     document.getElementById('panel-predict').style.display = newMode === 'predict' ? 'block' : 'none';
     renderCourses();
+    // Recalc on mode switch
+    if(newMode === 'check') calculateLiveStats();
 }
 
-// ... Actions (Add/Delete/Update) ...
+// --- ACTIONS ---
+
 function updateActual(id, val) {
     state.actualGrades[id] = val;
-    document.getElementById(`grade-${id}`).classList.remove('error');
+    // Remove error styling
+    const el = document.getElementById(`grade-${id}`);
+    if(el) el.classList.remove('error');
+    
+    // 1. Calculate Stats
     calculateLiveStats();
+    // 2. FIX: SAVE IMMEDIATELY
+    saveSemesterConfig();
 }
 
 function toggleConstraint(id, grade) {
@@ -93,7 +98,9 @@ function toggleConstraint(id, grade) {
     const idx = arr.indexOf(grade);
     if (idx > -1) arr.splice(idx, 1);
     else arr.push(grade);
-    renderCourses();
+    renderCourses(); 
+    // Render calls save, but we can be explicit:
+    saveSemesterConfig();
 }
 
 function addCustomCourse() {
@@ -101,24 +108,27 @@ function addCustomCourse() {
     state.activeCourses.push({id: newId, name: "New Course", cr: 3, type: "Extra"});
     state.userConstraints[newId] = [...PREDICT_DEFAULT];
     state.actualGrades[newId] = "";
-    renderCourses();
+    renderCourses(); // render calls save
 }
 
 function deleteCustomCourse(id) {
     state.activeCourses = state.activeCourses.filter(c => c.id !== id);
     delete state.userConstraints[id];
     delete state.actualGrades[id];
-    renderCourses();
+    renderCourses(); // render calls save
 }
 
 function updateCustomName(id, val) {
     const c = state.activeCourses.find(x => x.id === id);
     if(c) c.name = val;
+    saveSemesterConfig(); // FIX: Save name change
 }
 
 function updateCustomCredits(id, val) {
     const c = state.activeCourses.find(x => x.id === id);
     if(c) c.cr = parseFloat(val) || 0;
+    saveSemesterConfig(); // FIX: Save credits change
+    if(state.mode === 'check') calculateLiveStats();
 }
 
 function updateStartData() {
@@ -149,7 +159,7 @@ function saveAndUnlock() {
     let semCredits = state.activeCourses.reduce((sum, c) => sum + c.cr, 0);
     
     state.academicHistory[state.currentSem] = { completed: true, cgpa: currentLiveCGPA, credits: prevHist.credits + semCredits };
-    saveHistory();
+    saveHistory(); // Saves to local + Cloud
     renderTabState();
     showToast(`Semester ${state.currentSem} Saved Successfully!`);
 }
@@ -191,13 +201,13 @@ function calculateWorstCase() {
 
 // --- INIT ---
 document.addEventListener('DOMContentLoaded', () => {
-    loadHistory();
+    loadHistory(); 
 
+    // Initialize Inputs from saved history
     const startHistory = state.academicHistory["2"];
     if (startHistory) {
         const cgpaInput = document.getElementById('currCGPA');
         const creditsInput = document.getElementById('currCredits');
-        
         if (cgpaInput) cgpaInput.value = startHistory.cgpa;
         if (creditsInput) creditsInput.value = startHistory.credits;
     }
@@ -205,29 +215,35 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTabState();
     loadSemester("3");
 
-    // Listen for Login
+    // FIX: Auth Listener to update Button Text
     onAuthStateChanged(auth, async (user) => {
+        console.log("Auth State Changed:", user); // Debug Log
         if (user) {
-            document.querySelector('.google-btn').innerText = `Synced: ${user.displayName.split(' ')[0]}`;
-            // When user logs in, pull their data
+            const btn = document.querySelector('.google-btn');
+            if(btn) {
+                // Gets "Alby" from "Alby Surname"
+                const name = user.displayName ? user.displayName.split(' ')[0] : 'User';
+                btn.innerText = `Synced: ${name}`;
+                btn.style.background = "#22c55e"; // Optional: turn green on sync
+            }
+            
+            // Auto-Sync
             const updated = await syncFromCloud();
             if (updated) {
-                // If we got new data, refresh the UI
                 renderTabState();
-                
-                // If on Sem 3, update the inputs to match new history
+                // Update inputs if we just pulled new history
                 const hist = state.academicHistory["2"];
                 if(state.currentSem === "3" && hist) {
                    document.getElementById('currCGPA').value = hist.cgpa;
                    document.getElementById('currCredits').value = hist.credits;
                 }
-                
-                showToast("Data downloaded from Cloud!");
+                showToast("Data synced from Cloud!");
             }
         }
     });
 });
 
+// --- EXPOSE TO WINDOW ---
 window.app = {
     switchTab,
     switchMode,

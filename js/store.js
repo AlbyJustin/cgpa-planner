@@ -26,10 +26,10 @@ export function loadHistory() {
 
 export function saveHistory() {
     localStorage.setItem('nitt_v11_history', JSON.stringify(state.academicHistory));
-    // Try to sync to cloud if logged in
     syncToCloud(); 
 }
 
+// FIX: Save EVERYTHING (Courses + Grades + Constraints)
 export function saveSemesterConfig() {
     const dataToSave = {
         courses: state.activeCourses,
@@ -58,10 +58,9 @@ export async function syncFromCloud() {
             const data = docSnap.data();
             if (data.academicHistory) {
                 state.academicHistory = data.academicHistory;
-                // Update LocalStorage to match Cloud
                 localStorage.setItem('nitt_v11_history', JSON.stringify(state.academicHistory));
                 console.log("Data synced from cloud!");
-                return true; // Signal that we updated data
+                return true; 
             }
         }
     } catch (e) {
